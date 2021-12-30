@@ -5,7 +5,8 @@ export REQUIREMENTS_CHECK_SOURCE_GUARD="INCLUDED"
 #   ReqsCheck "docker" "yum" "curl"
 #   [[ $? -ne 0 ]] && $ErrMessage "Script requirements not met"
 
-source "$(dirname "${0}")"/lib/logging.sh
+LIB_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+source ${LIB_DIR}/logging.sh
 
 ReqsCheck() {
     local rc=0

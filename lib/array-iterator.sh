@@ -17,8 +17,8 @@ export ARRAY_ITERATOR_SOURCE_GUARD="INCLUDED"
 #   ForEachElement testArray SomeFunction sf1, sf2, ..., sfN
 #   [[ $? -ne 0 ]] && do something on failure
 
-
-source "$(dirname "${0}")"/lib/logging.sh
+LIB_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+source ${LIB_DIR}/logging.sh
 
 ForEachElement() {
     local thisArray="${1}[@]"
