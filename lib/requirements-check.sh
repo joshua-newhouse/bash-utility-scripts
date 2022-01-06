@@ -21,3 +21,15 @@ ReqsCheck() {
     return ${rc}
 }
 
+EnvCheck() {
+    local rc=0
+
+    for envVar in "$@"; do
+        [[ -z "${!envVar}" ]] \
+            && $WarnMessage "Variable ${envVar} is not set in the environment." \
+            && rc=1
+    done
+
+    return ${rc}
+}
+
