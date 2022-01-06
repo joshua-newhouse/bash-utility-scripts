@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# The purpose of this script is to demonstrate the use of the library functions.
+#
+# The function of this script is to backup local directories to a remote
+#   machine. The user provides necessary configurations through a config file
+#   which can be provided as the first argument to this script or, if not
+#   provided, defaults to the ../conf/backup.conf file.
+#
+#   ./runbackup.sh [path/to/config/file]
+
 source "$(dirname "${0}")"/../lib/logging.sh
 source "$(dirname "${0}")"/../lib/array-iterator.sh
 source "$(dirname "${0}")"/../lib/requirements-check.sh
@@ -14,32 +23,25 @@ IsRemoteAvailable() {
     return 0
 }
 
-#Refactor to capture env and only take additional args as param
 BackupDirectory() {
-    local directory="${1}"
-    local port="${2}"
-    local user="${3}"
-    local host="${4}"
-    local remoteDir="${5}"
-    local logFile="${6}"
+    local directory="${1}"; shift 1
+    local rsyncOpts="$*"
 
     $InfoMessage "Backing up ${directory}"
 
-    rsync -e "ssh -p ${port} -i ~/.ssh/id_rsa" \
-            -aPR \
-            --exclude=".Trash*" \
-            --exclude="*LocalStorage*" \
-            "${directory}" "${user}@${host}:${remoteDir}" 2>> "${logFile}"
+    rsync -e "ssh -p ${PORT} -i ~/.ssh/id_rsa" ${rsyncOpts} \
+            "${directory}" "${USER}@${HOST}:${REMOTE_DIR}" 2>> "${ERROR_LOG}"
 
     return $?
 }
 
 Main() {
-#    local confFile="${1:-"$(dirname "${0}")"/../conf/backup.conf}"
+    local confFile="${1:-"$(dirname "${0}")"/../conf/backup.conf}"
 
-#    source "${confFile}"
-    [[ -f "${1}" ]] && source "${1}" \
-        || source "$(dirname "${0}")"/../conf/backup.conf
+    [[ -f "${confFile}" ]] \
+        && source "${confFile}" \
+        && $InfoMessage "Sourced configuration from ${confFile}" \
+        || $WarnMessage "Failed sourcing configuration from ${confFile}"
 
     ReqsCheck "nslookup" "ping" "rsync" \
         && EnvCheck "USER" "HOST" "PORT" "ERROR_LOG" "LOCAL_DIRS" "REMOTE_DIR"
@@ -52,7 +54,7 @@ Main() {
     rm -f "${ERROR_LOG}"
 
     ForEachElement LOCAL_DIRS BackupDirectory \
-        "${PORT}" "${USER}" "${HOST}" "${REMOTE_DIR}" "${ERROR_LOG}"
+        '-aPR' '--exclude=".Trash*"' '--exclude="*LocalStorage*"'
 
     cat "${ERROR_LOG}"
 
